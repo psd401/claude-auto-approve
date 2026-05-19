@@ -18,6 +18,9 @@ REASON=$(echo "$INPUT" | jq -r '.reason // ""' 2>/dev/null) || true
 # Bail if we can't parse input — fall back to prompting
 [[ -z "$TOOL_NAME" ]] && exit 0
 
+# Never auto-approve tools that require user interaction
+[[ "$TOOL_NAME" == "AskUserQuestion" ]] && exit 0
+
 # Extract the relevant input value depending on tool type
 if [[ "$TOOL_NAME" == "Bash" ]]; then
     TOOL_INPUT=$(echo "$INPUT" | jq -r '.tool_input.command // ""' 2>/dev/null) || true
