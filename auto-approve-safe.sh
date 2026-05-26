@@ -5,8 +5,8 @@
 set -euo pipefail
 trap 'exit 0' ERR
 
-SETTINGS="$HOME/.claude/settings.json"
-LOG_FILE="$HOME/.claude/permissions.log"
+SETTINGS="${CLAUDE_SETTINGS:-$HOME/.claude/settings.json}"
+LOG_FILE="${CLAUDE_PERMISSIONS_LOG:-$HOME/.claude/permissions.log}"
 
 # Read hook JSON from stdin
 INPUT=$(cat)
@@ -24,15 +24,27 @@ REASON=$(echo "$INPUT" | jq -r '.reason // ""' 2>/dev/null) || true
 # Extract the relevant input value depending on tool type
 if [[ "$TOOL_NAME" == "Bash" ]]; then
     TOOL_INPUT=$(echo "$INPUT" | jq -r '.tool_input.command // ""' 2>/dev/null) || true
+    # Strip leading/trailing whitespace to prevent bypass via " sudo rm -rf /"
+    TOOL_INPUT=$(printf '%s' "$TOOL_INPUT" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
 elif [[ "$TOOL_NAME" == "Read" || "$TOOL_NAME" == "Write" || "$TOOL_NAME" == "Edit" ]]; then
     TOOL_INPUT=$(echo "$INPUT" | jq -r '.tool_input.file_path // ""' 2>/dev/null) || true
 else
     TOOL_INPUT=""
 fi
 
+# Bash with no command is invalid — fall back to prompt
+[[ "$TOOL_NAME" == "Bash" && -z "$TOOL_INPUT" ]] && exit 0
+
 # Load deny and ask rules from settings.json
 if [[ ! -f "$SETTINGS" ]]; then
     exit 0  # No settings = fall back to prompt
+fi
+
+# Validate that settings.json is parseable before extracting rules.
+# If jq can't parse the file, fall back to prompt rather than silently
+# approving everything with empty rule sets.
+if ! jq empty "$SETTINGS" 2>/dev/null; then
+    exit 0
 fi
 
 DENY_RULES=$(jq -r '.permissions.deny[]? // empty' "$SETTINGS" 2>/dev/null) || true
@@ -121,10 +133,15 @@ while IFS= read -r rule; do
             BLOCKED=true
             break
         fi
+    elif [[ -z "$TOOL_INPUT" ]]; then
+        # Tool has a pattern rule but we couldn't extract its input.
+        # Conservatively block to avoid silently bypassing deny rules.
+        BLOCKED=true
+        break
     else
         # Regex matching for file paths (handles **/ globstar)
-        local_regex=$(glob_to_regex "$RULE_PATTERN")
-        if [[ "$TOOL_INPUT" =~ $local_regex ]]; then
+        rule_regex=$(glob_to_regex "$RULE_PATTERN")
+        if [[ "$TOOL_INPUT" =~ $rule_regex ]]; then
             BLOCKED=true
             break
         fi

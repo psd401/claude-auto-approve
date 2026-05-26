@@ -5,6 +5,8 @@
 HOOK="$(dirname "$0")/auto-approve-safe.sh"
 PASS=0
 FAIL=0
+TMPDIR_TEST=$(mktemp -d)
+trap 'rm -rf "$TMPDIR_TEST"' EXIT
 
 assert_approve() {
     local desc="$1"
@@ -25,6 +27,36 @@ assert_prompt() {
     local json="$2"
     local output
     output=$(echo "$json" | "$HOOK" 2>/dev/null)
+    if [[ -z "$output" ]] || ! echo "$output" | grep -q '"allow"'; then
+        ((PASS++))
+        echo "  PASS: $desc"
+    else
+        ((FAIL++))
+        echo "  FAIL: $desc (expected no output/prompt, got: '$output')"
+    fi
+}
+
+assert_approve_with_settings() {
+    local desc="$1"
+    local json="$2"
+    local settings_file="$3"
+    local output
+    output=$(echo "$json" | CLAUDE_SETTINGS="$settings_file" "$HOOK" 2>/dev/null)
+    if echo "$output" | grep -q '"allow"'; then
+        ((PASS++))
+        echo "  PASS: $desc"
+    else
+        ((FAIL++))
+        echo "  FAIL: $desc (expected allow, got: '$output')"
+    fi
+}
+
+assert_prompt_with_settings() {
+    local desc="$1"
+    local json="$2"
+    local settings_file="$3"
+    local output
+    output=$(echo "$json" | CLAUDE_SETTINGS="$settings_file" "$HOOK" 2>/dev/null)
     if [[ -z "$output" ]] || ! echo "$output" | grep -q '"allow"'; then
         ((PASS++))
         echo "  PASS: $desc"
@@ -172,6 +204,189 @@ assert_approve "Grep" \
 
 assert_approve "WebSearch" \
     '{"tool_name":"WebSearch","tool_input":{"query":"bash glob matching"},"reason":"some heuristic"}'
+
+echo ""
+echo "--- Bash: should prompt (whitespace bypass prevention, SEC-001) ---"
+
+assert_prompt "leading space on sudo" \
+    '{"tool_name":"Bash","tool_input":{"command":" sudo ls /root"},"reason":"unrecognized command"}'
+
+assert_prompt "leading tabs on rm -rf" \
+    '{"tool_name":"Bash","tool_input":{"command":"\trm -rf /tmp/test"},"reason":"unrecognized command"}'
+
+assert_prompt "trailing space on sudo" \
+    '{"tool_name":"Bash","tool_input":{"command":"sudo ls /root  "},"reason":"unrecognized command"}'
+
+echo ""
+echo "--- Malformed input: should prompt (TEST-001) ---"
+
+assert_prompt "invalid JSON input" \
+    '{malformed json'
+
+assert_prompt "empty input" \
+    ''
+
+assert_prompt "non-JSON string" \
+    'this is not json at all'
+
+echo ""
+echo "--- Missing settings.json: should prompt (TEST-002) ---"
+
+assert_prompt_with_settings "missing settings file" \
+    '{"tool_name":"Bash","tool_input":{"command":"bun test"},"reason":"test"}' \
+    "/tmp/nonexistent-settings-$(date +%s).json"
+
+echo ""
+echo "--- Malformed settings.json: should prompt (COR-001) ---"
+
+MALFORMED_SETTINGS="$TMPDIR_TEST/malformed-settings.json"
+echo '{invalid json content' > "$MALFORMED_SETTINGS"
+
+assert_prompt_with_settings "malformed settings falls back to prompt" \
+    '{"tool_name":"Bash","tool_input":{"command":"bun test"},"reason":"test"}' \
+    "$MALFORMED_SETTINGS"
+
+assert_prompt_with_settings "malformed settings blocks sudo" \
+    '{"tool_name":"Bash","tool_input":{"command":"sudo rm -rf /"},"reason":"test"}' \
+    "$MALFORMED_SETTINGS"
+
+echo ""
+echo "--- Valid settings with no deny/ask keys: should approve (TEST-002 edge) ---"
+
+EMPTY_RULES_SETTINGS="$TMPDIR_TEST/empty-rules-settings.json"
+echo '{"permissions":{}}' > "$EMPTY_RULES_SETTINGS"
+
+assert_approve_with_settings "no deny/ask keys = approve" \
+    '{"tool_name":"Bash","tool_input":{"command":"bun test"},"reason":"test"}' \
+    "$EMPTY_RULES_SETTINGS"
+
+echo ""
+echo "--- Malformed rules in settings: should still process valid rules (TEST-004) ---"
+
+MIXED_RULES_SETTINGS="$TMPDIR_TEST/mixed-rules-settings.json"
+cat > "$MIXED_RULES_SETTINGS" <<'SETTINGSEOF'
+{"permissions":{"deny":["Bash(sudo *)","not a valid rule!!!","Bash(rm -rf *)"],"ask":[]}}
+SETTINGSEOF
+
+assert_prompt_with_settings "valid rule after malformed rule still blocks" \
+    '{"tool_name":"Bash","tool_input":{"command":"sudo ls /root"},"reason":"test"}' \
+    "$MIXED_RULES_SETTINGS"
+
+assert_prompt_with_settings "second valid rule after malformed rule still blocks" \
+    '{"tool_name":"Bash","tool_input":{"command":"rm -rf /tmp/test"},"reason":"test"}' \
+    "$MIXED_RULES_SETTINGS"
+
+assert_approve_with_settings "non-matching command still approved" \
+    '{"tool_name":"Bash","tool_input":{"command":"ls -la"},"reason":"test"}' \
+    "$MIXED_RULES_SETTINGS"
+
+echo ""
+echo "--- glob_to_regex edge cases via file paths (TEST-003) ---"
+
+GLOB_SETTINGS="$TMPDIR_TEST/glob-settings.json"
+cat > "$GLOB_SETTINGS" <<'SETTINGSEOF'
+{"permissions":{"deny":["Read(**/.env*)","Read(**/*.pem)","Read(**/secrets/**)"],"ask":[]}}
+SETTINGSEOF
+
+assert_prompt_with_settings "nested .env file" \
+    '{"tool_name":"Read","tool_input":{"file_path":"/a/b/c/d/.env.local"},"reason":"test"}' \
+    "$GLOB_SETTINGS"
+
+assert_prompt_with_settings ".env at root" \
+    '{"tool_name":"Read","tool_input":{"file_path":"/.env"},"reason":"test"}' \
+    "$GLOB_SETTINGS"
+
+assert_prompt_with_settings "deeply nested .pem" \
+    '{"tool_name":"Read","tool_input":{"file_path":"/home/user/certs/sub/server.pem"},"reason":"test"}' \
+    "$GLOB_SETTINGS"
+
+assert_prompt_with_settings "secrets with trailing globstar" \
+    '{"tool_name":"Read","tool_input":{"file_path":"/home/user/secrets/deep/nested/key.txt"},"reason":"test"}' \
+    "$GLOB_SETTINGS"
+
+assert_approve_with_settings "non-matching path approved" \
+    '{"tool_name":"Read","tool_input":{"file_path":"/home/user/code/index.ts"},"reason":"test"}' \
+    "$GLOB_SETTINGS"
+
+echo ""
+echo "--- Cross-tool isolation (TEST-006) ---"
+
+CROSS_SETTINGS="$TMPDIR_TEST/cross-settings.json"
+cat > "$CROSS_SETTINGS" <<'SETTINGSEOF'
+{"permissions":{"deny":["Bash(sudo *)","Read(**/.env*)"],"ask":[]}}
+SETTINGSEOF
+
+assert_approve_with_settings "Bash rule does not block Read" \
+    '{"tool_name":"Read","tool_input":{"file_path":"/usr/bin/sudo"},"reason":"test"}' \
+    "$CROSS_SETTINGS"
+
+assert_approve_with_settings "Read rule does not block Bash" \
+    '{"tool_name":"Bash","tool_input":{"command":"cat .env.local"},"reason":"test"}' \
+    "$CROSS_SETTINGS"
+
+assert_prompt_with_settings "Read rule does cross-apply to Edit" \
+    '{"tool_name":"Edit","tool_input":{"file_path":"/home/user/.env.local"},"reason":"test"}' \
+    "$CROSS_SETTINGS"
+
+echo ""
+echo "--- Empty command/file_path (TEST-009, TEST-010) ---"
+
+assert_prompt "Bash with empty command" \
+    '{"tool_name":"Bash","tool_input":{"command":""},"reason":"test"}'
+
+assert_prompt "Bash with missing command key" \
+    '{"tool_name":"Bash","tool_input":{},"reason":"test"}'
+
+assert_prompt "Read with empty file_path" \
+    '{"tool_name":"Read","tool_input":{"file_path":""},"reason":"test"}'
+
+assert_prompt "Edit with missing file_path key" \
+    '{"tool_name":"Edit","tool_input":{},"reason":"test"}'
+
+echo ""
+echo "--- Bash glob edge cases (TEST-005) ---"
+
+GLOB_BASH_SETTINGS="$TMPDIR_TEST/glob-bash-settings.json"
+cat > "$GLOB_BASH_SETTINGS" <<'SETTINGSEOF'
+{"permissions":{"deny":["Bash(rm -rf *)","Bash(sudo *)"],"ask":["Bash(rm *)"]}}
+SETTINGSEOF
+
+assert_prompt_with_settings "rm -rf with path" \
+    '{"tool_name":"Bash","tool_input":{"command":"rm -rf /important/data"},"reason":"test"}' \
+    "$GLOB_BASH_SETTINGS"
+
+assert_prompt_with_settings "sudo with complex args" \
+    '{"tool_name":"Bash","tool_input":{"command":"sudo bash -c \"echo hello\""},"reason":"test"}' \
+    "$GLOB_BASH_SETTINGS"
+
+assert_approve_with_settings "rm without args (no glob match on rm -rf)" \
+    '{"tool_name":"Bash","tool_input":{"command":"echo rm -rf is dangerous"},"reason":"test"}' \
+    "$GLOB_BASH_SETTINGS"
+
+echo ""
+echo "--- Log file verification (TEST-008) ---"
+
+LOG_TEST_FILE="$TMPDIR_TEST/test-permissions.log"
+LOG_SETTINGS="$TMPDIR_TEST/log-settings.json"
+echo '{"permissions":{"deny":[],"ask":[]}}' > "$LOG_SETTINGS"
+
+echo '{"tool_name":"Bash","tool_input":{"command":"echo hello"},"reason":"test log"}' | \
+    CLAUDE_SETTINGS="$LOG_SETTINGS" CLAUDE_PERMISSIONS_LOG="$LOG_TEST_FILE" "$HOOK" >/dev/null 2>&1
+
+if [[ -f "$LOG_TEST_FILE" ]] && jq empty "$LOG_TEST_FILE" 2>/dev/null; then
+    LOG_TOOL=$(jq -r '.tool' "$LOG_TEST_FILE" 2>/dev/null)
+    LOG_INPUT=$(jq -r '.input' "$LOG_TEST_FILE" 2>/dev/null)
+    if [[ "$LOG_TOOL" == "Bash" && "$LOG_INPUT" == "echo hello" ]]; then
+        ((PASS++))
+        echo "  PASS: log file created with valid JSON and correct fields"
+    else
+        ((FAIL++))
+        echo "  FAIL: log file has wrong content (tool=$LOG_TOOL, input=$LOG_INPUT)"
+    fi
+else
+    ((FAIL++))
+    echo "  FAIL: log file not created or invalid JSON"
+fi
 
 echo ""
 echo "=== Results: $PASS passed, $FAIL failed ==="

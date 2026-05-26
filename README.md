@@ -94,13 +94,21 @@ Run the test suite:
 ./test-auto-approve.sh
 ```
 
-37 tests covering:
+66 tests covering:
 - Bash approve (compound commands, substitution)
 - Bash deny (sudo, rm -rf, git reset --hard, etc.)
 - Bash ask (git push, rm)
+- Bash whitespace bypass prevention (leading/trailing space stripping)
 - Read/Edit/Write deny cross-application (secrets, keys, credentials)
+- Cross-tool isolation (Bash rules don't block Read, Read rules don't block Bash)
 - Safe file approvals
 - Other tool approvals (Glob, Grep, WebSearch)
+- Malformed JSON input handling
+- Missing/malformed settings.json fallback
+- Malformed rules skipped without breaking valid rules
+- glob_to_regex edge cases (nested paths, root paths, trailing globstar)
+- Empty/missing command and file_path fields
+- Log file creation and JSON format validation
 
 ## How deny rules work
 
