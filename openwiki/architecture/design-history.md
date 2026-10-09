@@ -3,7 +3,7 @@ type: Design History
 title: Design History and Rationale
 description: Why the hook is a deny-gate, and why its current guards exist, traced through the repository's commit history from the initial release to the workflow additions.
 tags: [design, history, rationale, security]
-timestamp: 2026-10-09T13:22:35Z
+timestamp: 2026-10-09T21:46:22Z
 openwiki:
   roles: [architecture, repository]
   change_kinds: [design-rationale, regression-history]
@@ -42,6 +42,8 @@ The README's problem statement is that Claude Code's built-in heuristics produce
 
 **Claude review addition.** Commit `1ef84f6` added `.github/workflows/claude-review.yml`, a caller of an organization-wide reusable review workflow. The commit message describes the review as advisory: it posts one comment and never approves or blocks a merge. Dependabot actors are skipped because the caller needs `id-token: write`. See [Claude review workflow](../operations/claude-review-workflow.md).
 
+**Secret scoping.** Both workflow callers originally used `secrets: inherit`, which handed every organization and repository secret to a reusable workflow that needs one or two. Commit `4563a70` narrowed the Claude review caller to `BEDROCK_API_KEY`. Commit `e0ddb17` narrowed the OpenWiki caller to `BEDROCK_API_KEY` and `PSD_AUTOMATION_APP_PRIVATE_KEY`. Both commit messages record the decision as Kris Hagel's, dated 2026-10-09. The rule that follows is that a caller passes only the secrets its reusable workflow reads. See [Wiki maintenance](../operations/wiki-maintenance.md) and [Claude review workflow](../operations/claude-review-workflow.md).
+
 ## Patterns to preserve
 
 - Fail closed on the hook's side means fail to prompt. Every fallback path, including the `set -euo pipefail` plus `trap 'exit 0' ERR` combination, exits with no output.
@@ -56,10 +58,6 @@ These are behaviors the history does not settle; they are documented as gaps in 
 - Tool names that contain digits, underscores, or colons cannot be expressed in rules.
 
 ## Related pages
-
-- [Architecture overview](overview.md) gives the system-level view.
-- [Test suite](../testing/test-suite.md) lists the regression tests that came out of the hardening work.
-
 
 - [Architecture overview](overview.md) gives the system-level view.
 - [Test suite](../testing/test-suite.md) lists the regression tests that came out of the hardening work.

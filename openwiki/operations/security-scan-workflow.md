@@ -38,7 +38,7 @@ Unlike the OpenWiki caller, the scan has no `paths-ignore` or `paths` filter, an
 
 ## Permissions
 
-The workflow sets `permissions: contents: read` at the top level and again on the `security-scan` job. The job does not request write scopes and passes no `secrets` block, so the reusable scan receives only the default token scope. This is the opposite of the OpenWiki caller, which needs `contents: write` and `pull-requests: write` and uses `secrets: inherit`.
+The workflow sets `permissions: contents: read` at the top level and again on the `security-scan` job. The job does not request write scopes and passes no `secrets` block, so the reusable scan receives only the default token scope. This is the opposite of the [OpenWiki caller](wiki-maintenance.md), which needs `contents: write` and `pull-requests: write` and passes two named secrets.
 
 ## Deliberate choices
 
