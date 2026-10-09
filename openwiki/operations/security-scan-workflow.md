@@ -62,5 +62,6 @@ The reusable workflow's steps, scanner set, and failure behavior are not in this
 ## Related pages
 
 - [Wiki maintenance](wiki-maintenance.md) describes the sibling OpenWiki caller and the shared `@main` pinning convention.
+- [Claude review workflow](claude-review-workflow.md) is the sibling review caller that also grants `id-token: write`.
 - [Architecture overview](../architecture/overview.md) lists this workflow among the repository's components.
 - [Design history](../architecture/design-history.md) records when the scan was added.

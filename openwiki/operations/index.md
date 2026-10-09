@@ -1,5 +1,6 @@
 # Files
 
+- [Claude Review Workflow](claude-review-workflow.md) - How the advisory Claude code review runs on pull requests through a thin GitHub Actions caller of an organization-owned reusable workflow, its opened/ready/reopened triggers, the Dependabot guard, the id-token permission, and the @main pinning decision.
 - [Installation and Configuration](installation-and-configuration.md) - How to install the PermissionRequest hook into Claude Code, register it in settings.json, enable cross-directory reads, configure optional log retention, and which environment variables and requirements the hook depends on.
 - [Security Scan Workflow](security-scan-workflow.md) - How the org security scan runs for claude-auto-approve through a thin GitHub Actions caller of an organization-owned reusable workflow, its triggers, read-only permissions, the @main pinning decision, and the zizmor suppression. Use when the scan does not run or when changing its triggers or permissions.
 - [OpenWiki Wiki Maintenance Workflow](wiki-maintenance.md) - How the openwiki/ knowledge base is refreshed by the GitHub Actions caller workflow, what triggers it, how concurrency and path filters prevent loops, and which parts live outside this repository.
