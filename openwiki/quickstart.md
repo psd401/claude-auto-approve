@@ -3,7 +3,7 @@ type: Quickstart
 title: claude-auto-approve Wiki Quickstart
 description: Entry point for the claude-auto-approve knowledge base; a Claude Code PermissionRequest bash hook that auto-approves prompts unless user deny or ask rules match, with task routing to source files, symbols, tests, and validation commands.
 tags: [quickstart, overview, routing, claude-code, permission-hook]
-timestamp: 2026-10-08T22:53:10Z
+timestamp: 2026-10-09T13:22:35Z
 openwiki:
   roles: [repository, architecture]
   change_kinds: [navigation]
@@ -66,4 +66,4 @@ There is no build, package, or release step in this repository, so no broader va
 ## Backlog
 
 - Reusable OpenWiki workflow internals (`PSD401/.github/.github/workflows/reusable-openwiki.yml@main`) are evidence-blocked: the file is not in this repository, so the wiki describes only the caller in `.github/workflows/openwiki-update.yml`.
-ether the review is a required check) are evidence-blocked: the file is not in this repository, so the wiki describes only the caller in `.github/workflows/claude-review.yml` and the intent recorded in commit `1ef84f6`.
+- Reusable Claude review internals (`PSD401/.github/.github/workflows/reusable-claude-review.yml@main`, including whether the review is a required check) are evidence-blocked: the file is not in this repository, so the wiki describes only the caller in `.github/workflows/claude-review.yml` and the intent recorded in commit `1ef84f6`.
