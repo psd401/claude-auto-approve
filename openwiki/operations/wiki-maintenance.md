@@ -45,7 +45,7 @@ The job requests `contents: write` and `pull-requests: write`. The comment in th
 
 ## Deliberate choices
 
-- The reusable workflow is pinned to `@main`, not to a tag or SHA. The workflow comment states this is intentional so central changes propagate to every repository, and two `zizmor: ignore[unpinned-uses]` comments suppress the scanner's finding for that reference.
+- The reusable workflow is pinned to `@main`, not to a tag or SHA. The workflow comment states this is intentional so central changes propagate to every repository, and two `zizmor: ignore[unpinned-uses]` comments suppress the scanner's finding for that reference. The [security scan workflow](security-scan-workflow.md) uses the same pinning convention and suppression.
 - The caller contains no build steps. Changing how the wiki is generated, which model is used, or how pull requests are opened must happen in the reusable workflow, not here.
 
 ## What is not verifiable from this repository
