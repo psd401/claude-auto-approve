@@ -1,7 +1,7 @@
 ---
 type: Design History
 title: Design History and Rationale
-description: Why the hook is a deny-gate, and why its current guards exist, traced through the repository's commit history from the initial release to the OpenWiki addition.
+description: Why the hook is a deny-gate, and why its current guards exist, traced through the repository's commit history from the initial release to the workflow additions.
 tags: [design, history, rationale, security]
 timestamp: 2026-10-08T22:53:10Z
 openwiki:
@@ -18,7 +18,7 @@ openwiki:
 
 # Design History and Rationale
 
-This page explains why the code looks the way it does. Each guard in [Hook decision flow](hook-decision-flow.md) traces back to a specific finding in the commit history. The history has four commits on `main`, and the subjects below are the durable record of each decision.
+This page explains why the code looks the way it does. Each guard in [Hook decision flow](hook-decision-flow.md) traces back to a specific finding in the commit history. The subjects below are the durable record of each decision on `main`, in order.
 
 ## Why a deny-gate
 
@@ -49,6 +49,15 @@ The README's problem statement is that Claude Code's built-in heuristics produce
 ## Open questions from the code
 
 These are behaviors the history does not settle; they are documented as gaps in [Rule matching](../domain/rule-matching.md#known-gaps-verified-by-probe):
+
+- Compound commands are matched as whole strings, so a deny or ask segment after `&&` is not caught.
+- Tool names that contain digits, underscores, or colons cannot be expressed in rules.
+
+## Related pages
+
+- [Architecture overview](overview.md) gives the system-level view.
+- [Test suite](../testing/test-suite.md) lists the regression tests that came out of the hardening work.
+ does not settle; they are documented as gaps in [Rule matching](../domain/rule-matching.md#known-gaps-verified-by-probe):
 
 - Compound commands are matched as whole strings, so a deny or ask segment after `&&` is not caught.
 - Tool names that contain digits, underscores, or colons cannot be expressed in rules.

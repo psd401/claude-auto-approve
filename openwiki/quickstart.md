@@ -7,7 +7,7 @@ timestamp: 2026-10-08T22:53:10Z
 openwiki:
   roles: [repository, architecture]
   change_kinds: [navigation]
-  source_paths: [auto-approve-safe.sh, test-auto-approve.sh, README.md]
+  source_paths: [auto-approve-safe.sh, test-auto-approve.sh, README.md, .github/workflows/security-scan.yml]
   symbols: [auto-approve-safe.sh, test-auto-approve.sh]
   test_paths: [test-auto-approve.sh]
   invariants:
@@ -44,6 +44,7 @@ Use this table to go from an intent to the first file, symbol, and test. Start w
 | Test harness helpers or adding cases | [Test suite](testing/test-suite.md) | `test-auto-approve.sh` | `assert_approve`, `assert_prompt`, `assert_*_with_settings` | the matching section header | `./test-auto-approve.sh` |
 | Why a guard exists or prior regression | [Design history](architecture/design-history.md) | commits: AskUserQuestion fix, malformed-settings hardening | `AskUserQuestion` exit, `jq empty` | "Malformed settings.json: should prompt (COR-001)" (no test covers the `AskUserQuestion` exit) | `./test-auto-approve.sh` |
 | OpenWiki refresh or workflow triggers | [Wiki maintenance](operations/wiki-maintenance.md) | `.github/workflows/openwiki-update.yml` | `paths-ignore`, concurrency `openwiki` | none (no tests for workflow) | YAML review; manual `workflow_dispatch` on the host platform |
+| Security scan triggers, permissions, or `@main` pin | [Security scan workflow](operations/security-scan-workflow.md) | `.github/workflows/security-scan.yml` | `permissions: contents: read`, `uses: ...reusable-security-scan.yml@main` | none (no tests for workflow) | YAML review; manual `workflow_dispatch` on the host platform |
 
 ### Validation
 

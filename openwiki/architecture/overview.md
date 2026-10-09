@@ -1,13 +1,13 @@
 ---
 type: Architecture Overview
 title: claude-auto-approve Architecture Overview
-description: System-level view of the claude-auto-approve PermissionRequest hook for Claude Code, its components (hook script, settings.json rules, audit log, test harness, OpenWiki workflow), their relationships, and the repository layout.
+description: System-level view of the claude-auto-approve PermissionRequest hook for Claude Code, its components (hook script, settings.json rules, audit log, test harness, OpenWiki and security scan workflows), their relationships, and the repository layout.
 tags: [architecture, overview, claude-code, permission-hook, bash]
-timestamp: 2026-10-08T22:53:10Z
+timestamp: 2026-10-09T00:00:00Z
 openwiki:
   roles: [architecture, repository]
   change_kinds: [architecture-overview]
-  source_paths: [auto-approve-safe.sh, test-auto-approve.sh, README.md, LICENSE, .github/workflows/openwiki-update.yml]
+  source_paths: [auto-approve-safe.sh, test-auto-approve.sh, README.md, LICENSE, .github/workflows/openwiki-update.yml, .github/workflows/security-scan.yml]
   symbols: [auto-approve-safe.sh, test-auto-approve.sh]
   test_paths: [test-auto-approve.sh]
   invariants:
@@ -73,6 +73,7 @@ test-auto-approve.sh             test harness (66 cases)
 README.md                        user documentation: install, rules, log format
 LICENSE                          MIT
 .github/workflows/openwiki-update.yml   wiki refresh caller
+.github/workflows/security-scan.yml     org security scan caller
 openwiki/                        this knowledge base (generated)
 ```
 
@@ -81,4 +82,6 @@ There is no build, package, or generated-code step. The only validation is the t
 ## Related pages
 
 - [Hook decision flow](hook-decision-flow.md) is the first page to read for runtime changes.
+- [Design history](design-history.md) explains why the guards are ordered the way they are.
+for runtime changes.
 - [Design history](design-history.md) explains why the guards are ordered the way they are.
