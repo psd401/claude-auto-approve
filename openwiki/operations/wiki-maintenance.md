@@ -66,4 +66,4 @@ There are no unit tests for the workflow. The narrowest check is a YAML review o
 
 - [Quickstart](../quickstart.md) explains how to use this wiki.
 - [Design history](../architecture/design-history.md) records when the OpenWiki caller was added.
-ki caller was added.
+- [Claude review workflow](claude-review-workflow.md) is the third thin caller that uses the same `@main` pinning convention.

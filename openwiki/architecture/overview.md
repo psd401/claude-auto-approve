@@ -1,13 +1,13 @@
 ---
 type: Architecture Overview
 title: claude-auto-approve Architecture Overview
-description: System-level view of the claude-auto-approve PermissionRequest hook for Claude Code, its components (hook script, settings.json rules, audit log, test harness, OpenWiki and security scan workflows), their relationships, and the repository layout.
+description: System-level view of the claude-auto-approve PermissionRequest hook for Claude Code, its components (hook script, settings.json rules, audit log, test harness, OpenWiki, security scan, and Claude review workflows), their relationships, and the repository layout.
 tags: [architecture, overview, claude-code, permission-hook, bash]
-timestamp: 2026-10-09T00:00:00Z
+timestamp: 2026-10-09T05:48:38Z
 openwiki:
   roles: [architecture, repository]
   change_kinds: [architecture-overview]
-  source_paths: [auto-approve-safe.sh, test-auto-approve.sh, README.md, LICENSE, .github/workflows/openwiki-update.yml, .github/workflows/security-scan.yml]
+  source_paths: [auto-approve-safe.sh, test-auto-approve.sh, README.md, LICENSE, .github/workflows/openwiki-update.yml, .github/workflows/security-scan.yml, .github/workflows/claude-review.yml]
   symbols: [auto-approve-safe.sh, test-auto-approve.sh]
   test_paths: [test-auto-approve.sh]
   invariants:
@@ -18,7 +18,7 @@ openwiki:
 
 # Architecture Overview
 
-`claude-auto-approve` is a single-purpose tool: a Claude Code `PermissionRequest` hook. It auto-approves permission prompts that the user's own rules do not block, so subagents and long workflows are not stuck on false-positive heuristics. The repository is small: one runtime script, one test script, a README, a license, and an OpenWiki workflow.
+`claude-auto-approve` is a single-purpose tool: a Claude Code `PermissionRequest` hook. It auto-approves permission prompts that the user's own rules do not block, so subagents and long workflows are not stuck on false-positive heuristics. The repository is small: one runtime script, one test script, a README, a license, and three GitHub Actions callers (OpenWiki refresh, security scan, and Claude review).
 
 ## When to consult this page
 
@@ -34,6 +34,8 @@ Start here to understand how the pieces connect, then go to the page for the com
 | `test-auto-approve.sh` | End-to-end harness that runs the hook with mock JSON and checks stdout. | [Test suite](../testing/test-suite.md) |
 | README installation steps | The only install mechanism; there is no package. | [Installation and configuration](../operations/installation-and-configuration.md) |
 | `.github/workflows/openwiki-update.yml` | Refreshes this wiki through an external reusable workflow. | [Wiki maintenance](../operations/wiki-maintenance.md) |
+| `.github/workflows/security-scan.yml` | Runs the org security scan through an external reusable workflow. | [Security scan workflow](../operations/security-scan-workflow.md) |
+| `.github/workflows/claude-review.yml` | Requests an advisory Claude review on pull requests through an external reusable workflow. | [Claude review workflow](../operations/claude-review-workflow.md) |
 
 The history that explains the current guards is in [Design history](design-history.md).
 
@@ -68,13 +70,14 @@ Caption: the request/response path between Claude Code, the hook, the rule sourc
 ## Repository layout
 
 ```text
-auto-approve-safe.sh             hook runtime (single file)
-test-auto-approve.sh             test harness (66 cases)
-README.md                        user documentation: install, rules, log format
-LICENSE                          MIT
+auto-approve-safe.sh                    hook runtime (single file)
+test-auto-approve.sh                    test harness (66 cases)
+README.md                               user documentation: install, rules, log format
+LICENSE                                 MIT
 .github/workflows/openwiki-update.yml   wiki refresh caller
 .github/workflows/security-scan.yml     org security scan caller
-openwiki/                        this knowledge base (generated)
+.github/workflows/claude-review.yml     org advisory Claude review caller
+openwiki/                               this knowledge base (generated)
 ```
 
 There is no build, package, or generated-code step. The only validation is the test harness and bash syntax checking.
@@ -82,6 +85,4 @@ There is no build, package, or generated-code step. The only validation is the t
 ## Related pages
 
 - [Hook decision flow](hook-decision-flow.md) is the first page to read for runtime changes.
-- [Design history](design-history.md) explains why the guards are ordered the way they are.
-for runtime changes.
 - [Design history](design-history.md) explains why the guards are ordered the way they are.
