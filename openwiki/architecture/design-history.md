@@ -3,7 +3,7 @@ type: Design History
 title: Design History and Rationale
 description: Why the hook is a deny-gate, and why its current guards exist, traced through the repository's commit history from the initial release to the workflow additions.
 tags: [design, history, rationale, security]
-timestamp: 2026-10-09T05:48:38Z
+timestamp: 2026-10-09T13:22:35Z
 openwiki:
   roles: [architecture, repository]
   change_kinds: [design-rationale, regression-history]
@@ -56,6 +56,10 @@ These are behaviors the history does not settle; they are documented as gaps in 
 - Tool names that contain digits, underscores, or colons cannot be expressed in rules.
 
 ## Related pages
+
+- [Architecture overview](overview.md) gives the system-level view.
+- [Test suite](../testing/test-suite.md) lists the regression tests that came out of the hardening work.
+
 
 - [Architecture overview](overview.md) gives the system-level view.
 - [Test suite](../testing/test-suite.md) lists the regression tests that came out of the hardening work.

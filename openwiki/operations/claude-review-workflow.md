@@ -48,7 +48,7 @@ Caption: the caller-side gating. Everything after the `uses:` line happens in th
 
 The job sets `contents: read`, `pull-requests: read`, `issues: read`, and `id-token: write`. The inline comment says the calling repository must grant these because the organization default token is read-only and a reusable workflow cannot elevate it. `id-token: write` is the only write-type scope in this file, and it is the reason the Dependabot guard exists.
 
-The job passes `secrets: inherit`. The commit message says the review uses an organization-level Bedrock API key and a Claude model on the district's Amazon Bedrock account. This repository holds no credential, and the secret's value and name are not needed to change this file.
+The job passes one secret by name: `BEDROCK_API_KEY: ${{ secrets.BEDROCK_API_KEY }}`. It does not use `secrets: inherit`. Commit `4563a70` made this change so the review job no longer receives every organization and repository secret; the commit message says the reusable workflow reads only `BEDROCK_API_KEY`, the organization-level key for Claude on the district's Amazon Bedrock account. This repository holds no credential. When adding a secret that the reusable workflow needs, add it by name here; do not restore `secrets: inherit`.
 
 ## Deliberate choices
 
