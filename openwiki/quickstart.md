@@ -3,7 +3,7 @@ type: Quickstart
 title: claude-auto-approve Wiki Quickstart
 description: Entry point for the claude-auto-approve knowledge base; a Claude Code PermissionRequest bash hook that auto-approves prompts unless user deny or ask rules match, with task routing to source files, symbols, tests, and validation commands.
 tags: [quickstart, overview, routing, claude-code, permission-hook]
-timestamp: 2026-10-09T21:46:22Z
+timestamp: 2026-10-10T02:35:31Z
 openwiki:
   roles: [repository, architecture]
   change_kinds: [navigation]
@@ -45,7 +45,7 @@ Use this table to go from an intent to the first file, symbol, and test. Start w
 | Why a guard exists or prior regression | [Design history](architecture/design-history.md) | commits: AskUserQuestion fix, malformed-settings hardening | `AskUserQuestion` exit, `jq empty` | "Malformed settings.json: should prompt (COR-001)" (no test covers the `AskUserQuestion` exit) | `./test-auto-approve.sh` |
 | OpenWiki refresh, workflow triggers, or secrets passed to the caller | [Wiki maintenance](operations/wiki-maintenance.md) | `.github/workflows/openwiki-update.yml` | `paths-ignore`, concurrency `openwiki`, `secrets` block (named secrets, not `inherit`) | none (no tests for workflow) | YAML review; manual `workflow_dispatch` on the host platform |
 | Security scan triggers, permissions, or `@main` pin | [Security scan workflow](operations/security-scan-workflow.md) | `.github/workflows/security-scan.yml` | `permissions: contents: read`, `uses: ...reusable-security-scan.yml@main` | none (no tests for workflow) | YAML review; manual `workflow_dispatch` on the host platform |
-| Claude review triggers, Dependabot guard, or `id-token` permission | [Claude review workflow](operations/claude-review-workflow.md) | `.github/workflows/claude-review.yml` | `on.pull_request.types`, `if: github.actor != 'dependabot[bot]'`, `permissions: id-token: write` | none (no tests for workflow) | YAML review; open or reopen a non-Dependabot pull request and check the Actions run (no `workflow_dispatch`) |
+| Claude review triggers, Dependabot guard, or `id-token` permission | [Claude review workflow](operations/claude-review-workflow.md) | `.github/workflows/claude-review.yml` | `on.pull_request.types`, `if: github.actor != 'dependabot[bot]'`, `permissions: id-token: write` | none (no tests for workflow) | YAML review; open, reopen, or push to a non-Dependabot pull request and check the Actions run (no `workflow_dispatch`) |
 
 ### Validation
 
@@ -66,5 +66,4 @@ There is no build, package, or release step in this repository, so no broader va
 ## Backlog
 
 - Reusable OpenWiki workflow internals (`PSD401/.github/.github/workflows/reusable-openwiki.yml@main`) are evidence-blocked: the file is not in this repository, so the wiki describes only the caller in `.github/workflows/openwiki-update.yml`.
-- Reusable Claude review internals (`PSD401/.github/.github/workflows/reusable-claude-review.yml@main`, including whether the review is a required check) are evidence-blocked: the file is not in this repository, so the wiki describes only the caller in `.github/workflows/claude-review.yml` and the intent recorded in commit `1ef84f6`.
-thub/workflows/claude-review.yml` and the intent recorded in commit `1ef84f6`.
+- Reusable Claude review internals (`PSD401/.github/.github/workflows/reusable-claude-review.yml@main`, including its re-review logic and whether the review is enforced as a required check) are evidence-blocked: the file is not in this repository, so the wiki describes only the caller in `.github/workflows/claude-review.yml` and the intent recorded in commits `1ef84f6` and `379536b`.

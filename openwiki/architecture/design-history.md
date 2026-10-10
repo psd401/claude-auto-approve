@@ -3,7 +3,7 @@ type: Design History
 title: Design History and Rationale
 description: Why the hook is a deny-gate, and why its current guards exist, traced through the repository's commit history from the initial release to the workflow additions.
 tags: [design, history, rationale, security]
-timestamp: 2026-10-09T21:46:22Z
+timestamp: 2026-10-10T02:35:31Z
 openwiki:
   roles: [architecture, repository]
   change_kinds: [design-rationale, regression-history]
@@ -40,7 +40,7 @@ The README's problem statement is that Claude Code's built-in heuristics produce
 
 **OpenWiki addition.** The repository gained `.github/workflows/openwiki-update.yml`, a thin caller of an organization-wide reusable workflow. It runs on pushes to `main` (excluding `openwiki/**` changes), on a weekly schedule, and on manual dispatch. See [Wiki maintenance](../operations/wiki-maintenance.md).
 
-**Claude review addition.** Commit `1ef84f6` added `.github/workflows/claude-review.yml`, a caller of an organization-wide reusable review workflow. The commit message describes the review as advisory: it posts one comment and never approves or blocks a merge. Dependabot actors are skipped because the caller needs `id-token: write`. See [Claude review workflow](../operations/claude-review-workflow.md).
+**Claude review addition.** Commit `1ef84f6` added `.github/workflows/claude-review.yml`, a caller of an organization-wide reusable review workflow. The commit message describes the review as advisory: it posts one comment and never approves or blocks a merge. Dependabot actors are skipped because the caller needs `id-token: write`. Commit `379536b` later added the `synchronize` trigger so the review re-runs on every push, not only when a pull request is opened, marked ready, or reopened. See [Claude review workflow](../operations/claude-review-workflow.md).
 
 **Secret scoping.** Both workflow callers originally used `secrets: inherit`, which handed every organization and repository secret to a reusable workflow that needs one or two. Commit `4563a70` narrowed the Claude review caller to `BEDROCK_API_KEY`. Commit `e0ddb17` narrowed the OpenWiki caller to `BEDROCK_API_KEY` and `PSD_AUTOMATION_APP_PRIVATE_KEY`. Both commit messages record the decision as Kris Hagel's, dated 2026-10-09. The rule that follows is that a caller passes only the secrets its reusable workflow reads. See [Wiki maintenance](../operations/wiki-maintenance.md) and [Claude review workflow](../operations/claude-review-workflow.md).
 
