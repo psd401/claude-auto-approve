@@ -67,4 +67,3 @@ There is no build, package, or release step in this repository, so no broader va
 
 - Reusable OpenWiki workflow internals (`PSD401/.github/.github/workflows/reusable-openwiki.yml@main`) are evidence-blocked: the file is not in this repository, so the wiki describes only the caller in `.github/workflows/openwiki-update.yml`.
 - Reusable Claude review internals (`PSD401/.github/.github/workflows/reusable-claude-review.yml@main`, including its re-review logic and whether the review is enforced as a required check) are evidence-blocked: the file is not in this repository, so the wiki describes only the caller in `.github/workflows/claude-review.yml` and the intent recorded in commits `1ef84f6` and `379536b`.
-ibes only the caller in `.github/workflows/claude-review.yml` and the intent recorded in commits `1ef84f6` and `379536b`.
