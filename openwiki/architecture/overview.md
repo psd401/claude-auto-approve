@@ -3,11 +3,11 @@ type: Architecture Overview
 title: claude-auto-approve Architecture Overview
 description: System-level view of the claude-auto-approve PermissionRequest hook for Claude Code, its components (hook script, settings.json rules, audit log, test harness, OpenWiki, security scan, and Claude review workflows), their relationships, and the repository layout.
 tags: [architecture, overview, claude-code, permission-hook, bash]
-timestamp: 2026-10-09T05:48:38Z
+timestamp: 2026-10-22T05:29:06Z
 openwiki:
   roles: [architecture, repository]
   change_kinds: [architecture-overview]
-  source_paths: [auto-approve-safe.sh, test-auto-approve.sh, README.md, LICENSE, .github/workflows/openwiki-update.yml, .github/workflows/security-scan.yml, .github/workflows/claude-review.yml]
+  source_paths: [auto-approve-safe.sh, test-auto-approve.sh, README.md, LICENSE, .github/workflows/openwiki-update.yml, .github/workflows/security-scan.yml, .github/workflows/claude-review.yml, .github/dependabot.yml]
   symbols: [auto-approve-safe.sh, test-auto-approve.sh]
   test_paths: [test-auto-approve.sh]
   invariants:
@@ -36,6 +36,7 @@ Start here to understand how the pieces connect, then go to the page for the com
 | `.github/workflows/openwiki-update.yml` | Refreshes this wiki through an external reusable workflow. | [Wiki maintenance](../operations/wiki-maintenance.md) |
 | `.github/workflows/security-scan.yml` | Runs the org security scan through an external reusable workflow. | [Security scan workflow](../operations/security-scan-workflow.md) |
 | `.github/workflows/claude-review.yml` | Requests an advisory Claude review on pull requests through an external reusable workflow. | [Claude review workflow](../operations/claude-review-workflow.md) |
+| `.github/dependabot.yml` | Weekly Dependabot updates for the SHA-pinned `uses:` references in the three callers. | [GitHub Actions pinning and Dependabot](../operations/action-pinning-and-dependabot.md) |
 
 The history that explains the current guards is in [Design history](design-history.md).
 
@@ -77,6 +78,7 @@ LICENSE                                 MIT
 .github/workflows/openwiki-update.yml   wiki refresh caller
 .github/workflows/security-scan.yml     org security scan caller
 .github/workflows/claude-review.yml     org advisory Claude review caller
+.github/dependabot.yml                  weekly Dependabot updates for pinned Actions refs
 openwiki/                               this knowledge base (generated)
 ```
 
@@ -85,4 +87,6 @@ There is no build, package, or generated-code step. The only validation is the t
 ## Related pages
 
 - [Hook decision flow](hook-decision-flow.md) is the first page to read for runtime changes.
+- [Design history](design-history.md) explains why the guards are ordered the way they are.
+ead for runtime changes.
 - [Design history](design-history.md) explains why the guards are ordered the way they are.

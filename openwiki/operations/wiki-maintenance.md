@@ -3,7 +3,7 @@ type: Operations Guide
 title: OpenWiki Wiki Maintenance Workflow
 description: How the openwiki/ knowledge base is refreshed by the GitHub Actions caller workflow, what triggers it, how concurrency and path filters prevent loops, and which parts live outside this repository.
 tags: [openwiki, github-actions, ci, documentation, delivery]
-timestamp: 2026-10-09T21:46:22Z
+timestamp: 2026-10-22T05:29:06Z
 openwiki:
   roles: [delivery, operations, repository]
   change_kinds: [ci-workflow, documentation-refresh, secret-scope]
@@ -13,7 +13,7 @@ openwiki:
   invariants:
     - Pushes that only touch openwiki/** do not trigger a refresh.
     - Only the newest queued refresh survives; earlier runs are cancelled.
-    - The reusable workflow is referenced by branch and is not vendored in this repository.
+    - The reusable workflow is pinned to a full commit SHA and is not vendored in this repository.
     - The job passes only BEDROCK_API_KEY and PSD_AUTOMATION_APP_PRIVATE_KEY by name, never secrets: inherit.
   validation_commands: []
 ---
@@ -34,7 +34,7 @@ Consult this page when the wiki is stale, when a refresh does not run, or when c
 - `schedule` every Monday at 08:00 UTC (`0 8 * * 1`).
 - `workflow_dispatch` for manual runs.
 
-The job calls `PSD401/.github/.github/workflows/reusable-openwiki.yml@main` with `base_branch: main`, and passes two secrets by name: `BEDROCK_API_KEY` (the model) and `PSD_AUTOMATION_APP_PRIVATE_KEY` (the GitHub App that opens and merges the documentation pull request). It does not use `secrets: inherit`. Commit `e0ddb17` made this change so the job no longer receives every organization and repository secret. The [Claude review workflow](claude-review-workflow.md) applies the same narrowing to its single secret.
+The job calls `PSD401/.github/.github/workflows/reusable-openwiki.yml`, pinned to commit `1aa5f5351a78b15f5c71668037f5d35b9613ae41` (v1.0.0), with `base_branch: main`, and passes two secrets by name: `BEDROCK_API_KEY` (the model) and `PSD_AUTOMATION_APP_PRIVATE_KEY` (the GitHub App that opens and merges the documentation pull request). It does not use `secrets: inherit`. Commit `e0ddb17` made this change so the job no longer receives every organization and repository secret. The [Claude review workflow](claude-review-workflow.md) applies the same narrowing to its single secret.
 
 ## Concurrency
 
@@ -46,7 +46,7 @@ The job requests `contents: write` and `pull-requests: write`. The comment in th
 
 ## Deliberate choices
 
-- The reusable workflow is pinned to `@main`, not to a tag or SHA. The workflow comment states this is intentional so central changes propagate to every repository, and two `zizmor: ignore[unpinned-uses]` comments suppress the scanner's finding for that reference. The [security scan workflow](security-scan-workflow.md) uses the same pinning convention and suppression.
+- The reusable workflow is pinned to a full commit SHA with a `# v1.0.0` comment, not to `@main`. Commit `17c715e` made this change and removed the earlier `zizmor` suppressions. The policy, and the Dependabot update that moves the pin, are in [GitHub Actions pinning and Dependabot](action-pinning-and-dependabot.md).
 - The caller contains no build steps. Changing how the wiki is generated, which model is used, or how pull requests are opened must happen in the reusable workflow, not here.
 
 ## What is not verifiable from this repository
@@ -67,7 +67,4 @@ There are no unit tests for the workflow. The narrowest check is a YAML review o
 
 - [Quickstart](../quickstart.md) explains how to use this wiki.
 - [Design history](../architecture/design-history.md) records when the OpenWiki caller was added.
-- [Claude review workflow](claude-review-workflow.md) is the third thin caller that uses the same `@main` pinning convention.
-- [Quickstart](../quickstart.md) explains how to use this wiki.
-- [Design history](../architecture/design-history.md) records when the OpenWiki caller was added.
-- [Claude review workflow](claude-review-workflow.md) is the third thin caller that uses the same `@main` pinning convention.
+- [Claude review workflow](claude-review-workflow.md) is the third thin caller that uses the same SHA pinning policy.

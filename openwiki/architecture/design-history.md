@@ -44,6 +44,8 @@ The README's problem statement is that Claude Code's built-in heuristics produce
 
 **Secret scoping.** Both workflow callers originally used `secrets: inherit`, which handed every organization and repository secret to a reusable workflow that needs one or two. Commit `4563a70` narrowed the Claude review caller to `BEDROCK_API_KEY`. Commit `e0ddb17` narrowed the OpenWiki caller to `BEDROCK_API_KEY` and `PSD_AUTOMATION_APP_PRIVATE_KEY`. Both commit messages record the decision as Kris Hagel's, dated 2026-10-09. The rule that follows is that a caller passes only the secrets its reusable workflow reads. See [Wiki maintenance](../operations/wiki-maintenance.md) and [Claude review workflow](../operations/claude-review-workflow.md).
 
+**Action pinning.** All three callers originally referenced their reusable workflows at `@main`, with `zizmor` suppressions. Commit `17c715e` pinned each reference to a full commit SHA (`v1.0.0`) and added a weekly Dependabot configuration for GitHub Actions. The commit message gives the reason: a `@main` reference runs any merge to the organization's reusable workflows immediately, with this repository's permissions and secrets. See [GitHub Actions pinning and Dependabot](../operations/action-pinning-and-dependabot.md).
+
 ## Patterns to preserve
 
 - Fail closed on the hook's side means fail to prompt. Every fallback path, including the `set -euo pipefail` plus `trap 'exit 0' ERR` combination, exits with no output.
