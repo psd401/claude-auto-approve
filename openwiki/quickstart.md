@@ -3,11 +3,11 @@ type: Quickstart
 title: claude-auto-approve Wiki Quickstart
 description: Entry point for the claude-auto-approve knowledge base; a Claude Code PermissionRequest bash hook that auto-approves prompts unless user deny or ask rules match, with task routing to source files, symbols, tests, and validation commands.
 tags: [quickstart, overview, routing, claude-code, permission-hook]
-timestamp: 2026-10-12T08:27:44Z
+timestamp: 2026-10-22T05:29:06Z
 openwiki:
   roles: [repository, architecture]
   change_kinds: [navigation]
-  source_paths: [auto-approve-safe.sh, test-auto-approve.sh, README.md, .github/workflows/security-scan.yml]
+  source_paths: [auto-approve-safe.sh, test-auto-approve.sh, README.md, .github/workflows/security-scan.yml, .github/dependabot.yml]
   symbols: [auto-approve-safe.sh, test-auto-approve.sh]
   test_paths: [test-auto-approve.sh]
   invariants:
@@ -25,7 +25,7 @@ The repository is intentionally small: one runtime script (`auto-approve-safe.sh
 
 - **Architecture**: [Overview](architecture/overview.md) for the component map and runtime sequence; [Hook decision flow](architecture/hook-decision-flow.md) for the decision pipeline, fail-safe paths, and output contract; [Design history](architecture/design-history.md) for why each guard exists.
 - **Domain**: [Deny and ask rule matching](domain/rule-matching.md) for Bash globs, file-path regexes, cross-tool rules, and verified gaps; [Audit log](domain/audit-log.md) for the `permissions.log` schema and write semantics.
-- **Operations**: [Installation and configuration](operations/installation-and-configuration.md) for setup, environment overrides, and log retention; [Wiki maintenance](operations/wiki-maintenance.md) for the OpenWiki refresh workflow.
+- **Operations**: [Installation and configuration](operations/installation-and-configuration.md) for setup, environment overrides, and log retention; [Wiki maintenance](operations/wiki-maintenance.md) for the OpenWiki refresh workflow; [Security scan workflow](operations/security-scan-workflow.md) and [Claude review workflow](operations/claude-review-workflow.md) for the other two callers; [GitHub Actions pinning and Dependabot](operations/action-pinning-and-dependabot.md) for the SHA pin policy and automated pin updates.
 - **Testing**: [Test suite](testing/test-suite.md) for the harness, behavior matrix, environment dependencies, and quiet commands.
 
 ## Task routing
@@ -44,7 +44,8 @@ Use this table to go from an intent to the first file, symbol, and test. Start w
 | Test harness helpers or adding cases | [Test suite](testing/test-suite.md) | `test-auto-approve.sh` | `assert_approve`, `assert_prompt`, `assert_*_with_settings` | the matching section header | `./test-auto-approve.sh` |
 | Why a guard exists or prior regression | [Design history](architecture/design-history.md) | commits: AskUserQuestion fix, malformed-settings hardening | `AskUserQuestion` exit, `jq empty` | "Malformed settings.json: should prompt (COR-001)" (no test covers the `AskUserQuestion` exit) | `./test-auto-approve.sh` |
 | OpenWiki refresh, workflow triggers, or secrets passed to the caller | [Wiki maintenance](operations/wiki-maintenance.md) | `.github/workflows/openwiki-update.yml` | `paths-ignore`, concurrency `openwiki`, `secrets` block (named secrets, not `inherit`) | none (no tests for workflow) | YAML review; manual `workflow_dispatch` on the host platform |
-| Security scan triggers, permissions, or `@main` pin | [Security scan workflow](operations/security-scan-workflow.md) | `.github/workflows/security-scan.yml` | `permissions: contents: read`, `uses: ...reusable-security-scan.yml@main` | none (no tests for workflow) | YAML review; manual `workflow_dispatch` on the host platform |
+| Security scan triggers, permissions, or reusable-workflow pin | [Security scan workflow](operations/security-scan-workflow.md) | `.github/workflows/security-scan.yml` | `permissions: contents: read`, `uses: ...reusable-security-scan.yml@1aa5f53… # v1.0.0` | none (no tests for workflow) | YAML review; manual `workflow_dispatch` on the host platform |
+| Any `uses:` pin, Dependabot Actions updates, or `@main` regressions | [GitHub Actions pinning and Dependabot](operations/action-pinning-and-dependabot.md) | `.github/dependabot.yml`, `uses:` lines in `.github/workflows/*.yml` | `package-ecosystem: github-actions`, `cooldown.default-days`, 40-character SHA pin | none (no tests for workflow) | `grep -rn '@main' .github/workflows` (should print nothing) |
 | Claude review triggers, Dependabot guard, or `id-token` permission | [Claude review workflow](operations/claude-review-workflow.md) | `.github/workflows/claude-review.yml` | `on.pull_request.types`, `if: github.actor != 'dependabot[bot]'`, `permissions: id-token: write` | none (no tests for workflow) | YAML review; open, reopen, or push to a non-Dependabot pull request and check the Actions run (no `workflow_dispatch`) |
 
 ### Validation
@@ -65,5 +66,5 @@ There is no build, package, or release step in this repository, so no broader va
 
 ## Backlog
 
-- Reusable OpenWiki workflow internals (`PSD401/.github/.github/workflows/reusable-openwiki.yml@main`) are evidence-blocked: the file is not in this repository, so the wiki describes only the caller in `.github/workflows/openwiki-update.yml`.
-- Reusable Claude review internals (`PSD401/.github/.github/workflows/reusable-claude-review.yml@main`, including its re-review logic and whether the review is enforced as a required check) are evidence-blocked: the file is not in this repository, so the wiki describes only the caller in `.github/workflows/claude-review.yml` and the intent recorded in commits `1ef84f6` and `379536b`.
+- Reusable OpenWiki workflow internals (`PSD401/.github/.github/workflows/reusable-openwiki.yml` pinned at `1aa5f53`, v1.0.0) are evidence-blocked: the file is not in this repository, so the wiki describes only the caller in `.github/workflows/openwiki-update.yml`.
+- Reusable Claude review internals (`PSD401/.github/.github/workflows/reusable-claude-review.yml` pinned at `1aa5f53`, v1.0.0, including its re-review logic and whether the review is enforced as a required check) are evidence-blocked: the file is not in this repository, so the wiki describes only the caller in `.github/workflows/claude-review.yml` and the intent recorded in commits `1ef84f6` and `379536b`.

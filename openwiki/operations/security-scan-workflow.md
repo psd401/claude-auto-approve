@@ -1,9 +1,9 @@
 ---
 type: Operations Guide
 title: Security Scan Workflow
-description: How the org security scan runs for claude-auto-approve through a thin GitHub Actions caller of an organization-owned reusable workflow, its triggers, read-only permissions, the @main pinning decision, and the zizmor suppression. Use when the scan does not run or when changing its triggers or permissions.
+description: How the org security scan runs for claude-auto-approve through a thin GitHub Actions caller of an organization-owned reusable workflow, its triggers, read-only permissions, and its full commit SHA pin. Use when the scan does not run or when changing its triggers or permissions.
 tags: [security, github-actions, ci, delivery, operations]
-timestamp: 2026-10-09T00:00:00Z
+timestamp: 2026-10-22T05:29:06Z
 openwiki:
   roles: [delivery, operations]
   change_kinds: [ci-workflow, security-scan]
@@ -12,14 +12,14 @@ openwiki:
   test_paths: []
   invariants:
     - The scan job requests only contents: read; it does not inherit secrets.
-    - The reusable scan is referenced by branch @main, so central changes propagate without a commit here.
+    - The reusable scan is pinned to commit 1aa5f5351a78b15f5c71668037f5d35b9613ae41 (v1.0.0), so a new version reaches this repository only through a reviewed pin change.
     - The scan runs on pull requests, pushes to main, a weekly cron, and manual dispatch.
   validation_commands: []
 ---
 
 # Security Scan Workflow
 
-`.github/workflows/security-scan.yml` is the repository's security scan. Like the [OpenWiki caller](wiki-maintenance.md), it is a thin caller: the scan logic lives in `PSD401/.github/.github/workflows/reusable-security-scan.yml@main`, an organization-owned workflow that is not vendored in this repository. This repository's file only decides when the scan runs and what permissions it gets.
+`.github/workflows/security-scan.yml` is the repository's security scan. Like the [OpenWiki caller](wiki-maintenance.md), it is a thin caller: the scan logic lives in `PSD401/.github/.github/workflows/reusable-security-scan.yml`, an organization-owned workflow that is not vendored in this repository. The `uses:` line pins it to commit `1aa5f5351a78b15f5c71668037f5d35b9613ae41` (v1.0.0). This repository's file only decides when the scan runs and what permissions it gets. The pinning policy is in [GitHub Actions pinning and Dependabot](action-pinning-and-dependabot.md).
 
 ## When to consult this page
 
@@ -42,13 +42,12 @@ The workflow sets `permissions: contents: read` at the top level and again on th
 
 ## Deliberate choices
 
-- The reusable workflow is pinned to `@main`, not to a tag or SHA. The file comment says this is deliberate so that central bumps from the organization's standards propagate to every repository. The same reasoning is recorded for the OpenWiki caller.
-- Two `zizmor: ignore[unpinned-uses]` annotations suppress the scanner's own finding about that unpinned reference. Removing the `@main` pin would require removing these suppressions too; the zizmor rule itself is not configured in this repository.
+- The reusable workflow is pinned to a full commit SHA with a `# v1.0.0` comment. An earlier `@main` reference and its `zizmor: ignore[unpinned-uses]` suppressions were removed in commit `17c715e`. The reason is recorded in [GitHub Actions pinning and Dependabot](action-pinning-and-dependabot.md).
 
 ## Invariants for future changes
 
 - Keep the job at `contents: read`. Granting write access here is not needed for a read-only scan.
-- Keep the `@main` reference and its suppression comments together. Pinning to a SHA would stop central standard updates from reaching this repository.
+- Keep the SHA pin and its version comment together. Do not return to `@main`; central updates now arrive as Dependabot pin bumps.
 - Keep the weekly schedule and `workflow_dispatch` so a scan can be rerun without a code change.
 
 ## Focused validation
@@ -61,7 +60,8 @@ The reusable workflow's steps, scanner set, and failure behavior are not in this
 
 ## Related pages
 
-- [Wiki maintenance](wiki-maintenance.md) describes the sibling OpenWiki caller and the shared `@main` pinning convention.
+- [Wiki maintenance](wiki-maintenance.md) describes the sibling OpenWiki caller.
+- [GitHub Actions pinning and Dependabot](action-pinning-and-dependabot.md) owns the SHA pin policy and the weekly Dependabot update that moves it.
 - [Claude review workflow](claude-review-workflow.md) is the sibling review caller that also grants `id-token: write`.
 - [Architecture overview](../architecture/overview.md) lists this workflow among the repository's components.
 - [Design history](../architecture/design-history.md) records when the scan was added.

@@ -1,9 +1,9 @@
 ---
 type: Operations Guide
 title: Claude Review Workflow
-description: How the advisory Claude code review runs on pull requests through a thin GitHub Actions caller of an organization-owned reusable workflow, its opened/synchronize/ready/reopened triggers that re-review on every push, the Dependabot guard, the id-token permission, and the @main pinning decision.
+description: How the advisory Claude code review runs on pull requests through a thin GitHub Actions caller of an organization-owned reusable workflow, its opened/synchronize/ready/reopened triggers that re-review on every push, the Dependabot guard, the id-token permission, and its full commit SHA pin.
 tags: [code-review, github-actions, ci, delivery, operations]
-timestamp: 2026-10-10T02:35:31Z
+timestamp: 2026-10-22T05:29:06Z
 openwiki:
   roles: [delivery, operations]
   change_kinds: [ci-workflow, code-review]
@@ -14,13 +14,13 @@ openwiki:
     - The review runs when a pull request is opened, synchronized (a new push), marked ready for review, or reopened; each push to an open pull request starts a new review.
     - The job is skipped for dependabot[bot] actors, because a Dependabot caller cannot grant id-token: write.
     - The caller grants id-token: write; the reusable workflow cannot elevate its own token.
-    - The reusable workflow is referenced by branch @main, so central changes propagate without a commit here.
+    - The reusable workflow is pinned to commit 1aa5f5351a78b15f5c71668037f5d35b9613ae41 (v1.0.0), so a new version reaches this repository only through a reviewed pin change.
   validation_commands: []
 ---
 
 # Claude Review Workflow
 
-`.github/workflows/claude-review.yml` requests an automated Claude review of pull requests. Like the [security scan](security-scan-workflow.md) and the [OpenWiki caller](wiki-maintenance.md), it is a thin caller: the review logic lives in `PSD401/.github/.github/workflows/reusable-claude-review.yml@main`, an organization-owned workflow that is not vendored in this repository. This repository's file decides when the review runs, which permissions and secrets the reusable workflow receives, and nothing else.
+`.github/workflows/claude-review.yml` requests an automated Claude review of pull requests. Like the [security scan](security-scan-workflow.md) and the [OpenWiki caller](wiki-maintenance.md), it is a thin caller: the review logic lives in `PSD401/.github/.github/workflows/reusable-claude-review.yml`, an organization-owned workflow that is not vendored in this repository. The `uses:` line pins it to commit `1aa5f5351a78b15f5c71668037f5d35b9613ae41` (v1.0.0). This repository's file decides when the review runs, which permissions and secrets the reusable workflow receives, and nothing else. The pinning policy is in [GitHub Actions pinning and Dependabot](action-pinning-and-dependabot.md).
 
 The commit that added it (`1ef84f6`, "Add the org Claude review") describes the intent: one severity-tiered review comment per pull request, advisory only, with no approval or merge blocking. Those behaviors come from the commit message and the reusable workflow, not from this file. Commit `379536b` ("Claude review: run on every push to a PR") later added the `synchronize` trigger; its message says a re-review posts only new or unresolved IMPORTANT findings.
 
@@ -34,7 +34,7 @@ Consult this page when the review does not start on a pull request or starts too
 flowchart TD
   A["pull_request: opened, synchronize, ready_for_review, reopened"] --> B{"actor is dependabot bot?"}
   B -- yes --> C["job skipped by if condition"]
-  B -- no --> D["call reusable-claude-review.yml at main"]
+  B -- no --> D["call reusable-claude-review.yml pinned to v1.0.0"]
   D --> E["reusable workflow posts review comment"]
 ```
 
@@ -53,14 +53,13 @@ The job passes one secret by name: `BEDROCK_API_KEY: ${{ secrets.BEDROCK_API_KEY
 ## Deliberate choices
 
 - Re-review on every push (`synchronize`) is deliberate, per commit `379536b`. The reusable workflow, not this file, decides what a re-review posts (per that commit message, only new or unresolved IMPORTANT findings).
-- The reusable workflow is pinned to `@main`, not to a tag or SHA. The file comment says this is deliberate so central changes from the organization's standards propagate to every repository. The same convention appears in [Wiki maintenance](wiki-maintenance.md) and [Security scan workflow](security-scan-workflow.md).
-- Inline `zizmor: ignore[unpinned-uses]` comments suppress the scanner's finding for the unpinned reference. Removing the `@main` pin requires removing these comments too.
+- The reusable workflow is pinned to a full commit SHA with a `# v1.0.0` comment. The earlier `@main` reference and its `zizmor: ignore[unpinned-uses]` comments were removed in commit `17c715e`. The reason is recorded in [GitHub Actions pinning and Dependabot](action-pinning-and-dependabot.md).
 
 ## Invariants for future changes
 
 - Keep the `id-token: write` grant on this caller. The reusable workflow cannot elevate its token, so removing the grant breaks the review.
 - Keep the `dependabot[bot]` guard together with the `id-token` grant. Removing the guard reintroduces the `startup_failure` the comment describes.
-- Keep the `@main` reference and its suppression comments together.
+- Keep the SHA pin and its version comment together. Do not return to `@main`.
 - Changing the trigger types changes when reviews appear. Removing `synchronize` returns to one review per pull request opening; verify the change against the intended pull request lifecycle, not only against the YAML syntax.
 
 ## Focused validation
@@ -74,6 +73,7 @@ The reusable workflow's steps, model choice, prompt, comment format, and re-revi
 ## Related pages
 
 - [Security scan workflow](security-scan-workflow.md) is the sibling caller with read-only permissions and a different trigger set.
-- [Wiki maintenance](wiki-maintenance.md) describes the OpenWiki caller and the shared `@main` pinning convention.
+- [Wiki maintenance](wiki-maintenance.md) describes the OpenWiki caller.
+- [GitHub Actions pinning and Dependabot](action-pinning-and-dependabot.md) owns the SHA pin policy shared by all three callers.
 - [Architecture overview](../architecture/overview.md) lists this workflow among the repository's components.
 - [Design history](../architecture/design-history.md) records when the review was added and when it began re-running on every push.
