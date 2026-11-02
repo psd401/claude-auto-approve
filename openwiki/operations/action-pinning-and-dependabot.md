@@ -3,7 +3,7 @@ type: Operations Guide
 title: GitHub Actions Pinning and Dependabot
 description: How every GitHub Actions uses reference in the repository's workflows is pinned to a full commit SHA with a version comment, how Dependabot keeps those pins current on a weekly schedule with a 7-day cooldown, and why the earlier @main convention was removed. Use when changing a uses line, bumping a reusable workflow, or handling a Dependabot pull request.
 tags: [github-actions, supply-chain, ci, delivery, operations]
-timestamp: 2026-10-22T05:29:06Z
+timestamp: 2026-11-02T08:10:00Z
 openwiki:
   roles: [delivery, operations]
   change_kinds: [dependency-pinning, ci-workflow]
@@ -78,6 +78,10 @@ The contents of the reusable workflows at `1aa5f53` are not in this repository. 
 
 - [Claude review workflow](claude-review-workflow.md) pins its reusable review workflow and grants `id-token: write`.
 - [Security scan workflow](security-scan-workflow.md) pins its reusable scan workflow and grants read-only permission.
+- [Wiki maintenance](wiki-maintenance.md) pins its reusable OpenWiki workflow and limits its secrets to two named values.
+- [Architecture overview](../architecture/overview.md) lists the workflow files and Dependabot config as repository components.
+- [Design history](../architecture/design-history.md) records the workflow additions that this policy now governs.
+ workflow and grants read-only permission.
 - [Wiki maintenance](wiki-maintenance.md) pins its reusable OpenWiki workflow and limits its secrets to two named values.
 - [Architecture overview](../architecture/overview.md) lists the workflow files and Dependabot config as repository components.
 - [Design history](../architecture/design-history.md) records the workflow additions that this policy now governs.
