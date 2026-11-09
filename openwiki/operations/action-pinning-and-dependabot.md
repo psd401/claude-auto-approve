@@ -81,7 +81,3 @@ The contents of the reusable workflows at `1aa5f53` are not in this repository. 
 - [Wiki maintenance](wiki-maintenance.md) pins its reusable OpenWiki workflow and limits its secrets to two named values.
 - [Architecture overview](../architecture/overview.md) lists the workflow files and Dependabot config as repository components.
 - [Design history](../architecture/design-history.md) records the workflow additions that this policy now governs.
- workflow and grants read-only permission.
-- [Wiki maintenance](wiki-maintenance.md) pins its reusable OpenWiki workflow and limits its secrets to two named values.
-- [Architecture overview](../architecture/overview.md) lists the workflow files and Dependabot config as repository components.
-- [Design history](../architecture/design-history.md) records the workflow additions that this policy now governs.
